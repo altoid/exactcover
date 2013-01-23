@@ -224,50 +224,58 @@ def log_msg(level, msg):
 
     print "%s%s" % ('    ' * level, msg)
 
-solutions = []
+class DLXAlgorithm:
 
-def dlx1(matrix, partial_solution, level=0):
+    def __init__(self, matrix):
 
-    global solutions
+        self._matrix = matrix
+        self._solutions = set()
+        self._partial_solution = []
 
-    if matrix.empty:
-        l = [p.row_header.n for p in partial_solution]
-        solutions.append(tuple(sorted(l)))
-        return True
+    def dlx1(self, level=0):
+    
+        if self._matrix.empty:
+            l = [p.row_header.n for p in self._partial_solution]
+            self._solutions.add(tuple(sorted(l)))
+            return True
+    
+        # check for an empty column.  if we find one,
+        # game over.
+        ch = self._matrix.root.r
+        while ch != self._matrix.root:
+            if ch.empty:
+                return False
+            ch = ch.r
+    
+        # start with the leftmost column, keep trying
+            
+        ch = self._matrix.root.r
+        while ch != self._matrix.root:
+    
+            self._matrix.cover_column(ch)
+    
+            # go through each row and reduce
+            r = ch.d
+            while r != ch:
+    
+                self._matrix.reduce_by_row(r)
+                self._partial_solution.append(r)
+    
+                answer = self.dlx1(level + 1)
+    
+                self._partial_solution.pop()
+                self._matrix.unreduce_by_row(r)
+                r = r.d
+    
+            self._matrix.uncover_column(ch)
+            ch = ch.r
+    
+        return False
 
-    # check for an empty column.  if we find one,
-    # game over.
-    ch = matrix.root.r
-    while ch != matrix.root:
-        if ch.empty:
-            return False
-        ch = ch.r
+    @property 
+    def solutions(self):
+        return self._solutions
 
-    # start with the leftmost column, keep trying
-        
-    ch = matrix.root.r
-    while ch != matrix.root:
-
-        matrix.cover_column(ch)
-
-        # go through each row and reduce
-        r = ch.d
-        while r != ch:
-
-            matrix.reduce_by_row(r)
-            partial_solution.append(r)
-
-            answer = dlx1(matrix, partial_solution, level + 1)
-
-            partial_solution.pop()
-            matrix.unreduce_by_row(r)
-            r = r.d
-
-        matrix.uncover_column(ch)
-        ch = ch.r
-
-    return False
-        
 def main(filename):
 
     matrix = Matrix()
@@ -287,15 +295,14 @@ def main(filename):
 
     matrix.display()
 
-    partial_solution = []
-    result = dlx1(matrix, partial_solution)
+    dlx = DLXAlgorithm(matrix)
+    dlx.dlx1()
+    solutions = dlx.solutions
 
-    sset = set(solutions)
-
-    if len(sset) == 0:
+    if len(solutions) == 0:
         print 'no solution'
     else:
-        for s in sset:
+        for s in solutions:
             matrix.display(list(s))
 
 if __name__ == '__main__':
