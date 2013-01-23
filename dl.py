@@ -2,11 +2,12 @@
 
 import sys
 
-class ColumnObject:
+class ColumnHeader:
 
-    def __init__(self, name):
+    def __init__(self, name, col_number=0):
 
         self._name = name
+        self._n = col_number
         self.l = self.r = self.u = self.d = self
 
     @property
@@ -14,41 +15,45 @@ class ColumnObject:
         return self._name
 
     @property
+    def n(self):
+        return self._n
+
+    @property
     def empty(self):
         return self.d == self
 
 class RowHeader:
 
-    def __init__(self, row):
+    def __init__(self, row_number):
 
-        self._row = row
+        self._n = row_number
         self.l = self.r = self.u = self.d = self
 
     @property
-    def row(self):
-        return self._row
+    def n(self):
+        return self._n
 
 class DataObject:
 
-    def __init__(self, row, column):
+    def __init__(self, row_header, column_header):
 
         self.l = self.r = self.u = self.d = self
         self.c = None
-        self._row = row
-        self._column = column
+        self._row_header = row_header
+        self._column_header = column_header
 
     @property
-    def row(self):
-        return self._row
+    def row_header(self):
+        return self._row_header
 
     @property
-    def column(self):
-        return self._column
+    def column_header(self):
+        return self._column_header
 
 class Matrix:
 
     def __init__(self):
-        self.root = ColumnObject('root')
+        self.root = ColumnHeader('root')
         self.ncolumns = 0
         self._covered_columns = []
         self._row_headers = []
@@ -70,29 +75,30 @@ class Matrix:
 
     def add_column_headers(self, column_names):
 
-        for n in column_names:
-            column_header = ColumnObject(n)
+        for i, n in enumerate(column_names):
+            column_header = ColumnHeader(n, i)
             self.root.l.r = column_header
             column_header.r = self.root
             column_header.l = self.root.l
             self.root.l = column_header
         self.ncolumns = len(column_names)
 
-    def add_row(self, bits, row_number):
+    def add_row(self, bits):
 
         # the row headers are just to aid in traversal.  nothing in
         # the array points to them.
 
+        row_number = len(self._row_headers)
         row_header = RowHeader(row_number)
         self._row_headers.append(row_header)
 
         last_item_inserted = None
         ch = self.root
-        col_counter = 0
+
         for b in bits:
             ch = ch.r
             if b == '1':
-                bit_obj = DataObject(row_number, col_counter)
+                bit_obj = DataObject(row_header, ch)
                 bit_obj.c = ch
                 ch.u.d = bit_obj
                 bit_obj.d = ch
@@ -104,7 +110,6 @@ class Matrix:
                     last_item_inserted.r.l = bit_obj
                     last_item_inserted.r = bit_obj
                 last_item_inserted = bit_obj
-            col_counter += 1
 
         if last_item_inserted is not None:
             row_header.r = last_item_inserted
@@ -116,10 +121,10 @@ class Matrix:
         if rheader.r != rheader: # i.e. list is not empty
             h = rheader.l
             while True:
-                for i in range(last_column, h.column):
+                for i in range(last_column, h.column_header.n):
                     print '0',
                 print '1',
-                last_column = h.column + 1
+                last_column = h.column_header.n + 1
                 if h == rheader.r:
                     break
                 h = h.r
@@ -135,27 +140,28 @@ class Matrix:
         # traverse by rows
         print self.column_headers
 
-        for rheader in self._row_headers:
+        if partial_solution is None:
+            headers = self._row_headers
+        else:
+            headers = [x.row_header for x in partial_solution]
 
-            if partial_solution is None:
-                self._display_row(rheader)
-            elif rheader.row in partial_solution:
-                self._display_row(rheader)
+        for h in headers:
+            self._display_row(h)
 
-    def display_by_columns(self):
-
-        print '=' * 33
-
-        # traverse the whole matrix, by columns
-        c = self.root.r
-        while c != self.root:
-            print c.name
-            bit = c.d
-            while bit != c:
-                print "(%s, %d, %d)" % (bit.c.name, bit.row, bit.column),
-                bit = bit.d
-            print
-            c = c.r
+#    def display_by_columns(self):
+#
+#        print '=' * 33
+#
+#        # traverse the whole matrix, by columns
+#        c = self.root.r
+#        while c != self.root:
+#            print c.name
+#            bit = c.d
+#            while bit != c:
+#                print "(%s, %d, %d)" % (bit.c.name, bit.row, bit.column),
+#                bit = bit.d
+#            print
+#            c = c.r
 
     def cover_column(self, c):
         '''
@@ -193,7 +199,7 @@ class Matrix:
             cbit = cbit.u
 
         if c != self._covered_columns[-1]:
-            print "#########################"
+            print "######################### %s != %s" % (c.name, self._covered_columns[-1].name)
         else:
             self._covered_columns.pop()
 
@@ -238,14 +244,16 @@ def dlx1(matrix, partial_solution, level=0):
         # go through each row and reduce
         r = ch.d
         while r != ch:
+
             matrix.reduce_by_row(r)
+            partial_solution.append(r)
 
             answer = dlx1(matrix, partial_solution, level + 1)
 
             if answer == True:
-                partial_solution.append(r.row)
                 return True
 
+            partial_solution.pop()
             matrix.unreduce_by_row(r)
             r = r.d
 
@@ -267,12 +275,9 @@ def main(filename):
     # row headers are just for traversal/printing.
     # nothing in the matrix points to them.
 
-    row_counter = 0
     for line in f:
         bits = line.split()
-        matrix.add_row(bits, row_counter)
-
-        row_counter += 1
+        matrix.add_row(bits)
 
     matrix.display()
 
@@ -283,7 +288,8 @@ def main(filename):
         matrix.uncover_column(matrix._covered_columns[-1])
 
     if result:
-        print partial_solution
+        l = [p.row_header.n for p in partial_solution]
+        print l
         matrix.display(partial_solution)
     else:
         print 'no solution'
