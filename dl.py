@@ -22,6 +22,9 @@ class ColumnHeader:
     def empty(self):
         return self.d == self
 
+    def __str__(self):
+        return self._name
+
 class RowHeader:
 
     def __init__(self, row_number):
@@ -133,17 +136,17 @@ class Matrix:
 
         print
 
-    def display(self, partial_solution=None):
-
-        print '*' * 44
+    def display(self, solution=None):
+        # solution is a list of ints giving array indices
+        print '%s %s' % ('*' * 44, str(solution) if solution else '')
 
         # traverse by rows
         print self.column_headers
 
-        if partial_solution is None:
+        if solution is None:
             headers = self._row_headers
         else:
-            headers = [x.row_header for x in partial_solution]
+            headers = [self._row_headers[x] for x in solution]
 
         for h in headers:
             self._display_row(h)
@@ -221,9 +224,15 @@ def log_msg(level, msg):
 
     print "%s%s" % ('    ' * level, msg)
 
+solutions = []
+
 def dlx1(matrix, partial_solution, level=0):
 
+    global solutions
+
     if matrix.empty:
+        l = [p.row_header.n for p in partial_solution]
+        solutions.append(tuple(sorted(l)))
         return True
 
     # check for an empty column.  if we find one,
@@ -249,9 +258,6 @@ def dlx1(matrix, partial_solution, level=0):
             partial_solution.append(r)
 
             answer = dlx1(matrix, partial_solution, level + 1)
-
-            if answer == True:
-                return True
 
             partial_solution.pop()
             matrix.unreduce_by_row(r)
@@ -284,16 +290,13 @@ def main(filename):
     partial_solution = []
     result = dlx1(matrix, partial_solution)
 
-    while len(matrix._covered_columns) > 0:
-        matrix.uncover_column(matrix._covered_columns[-1])
+    sset = set(solutions)
 
-    if result:
-        l = [p.row_header.n for p in partial_solution]
-        print l
-        matrix.display(partial_solution)
-    else:
+    if len(sset) == 0:
         print 'no solution'
-
+    else:
+        for s in sset:
+            matrix.display(list(s))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
