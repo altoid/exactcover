@@ -51,6 +51,7 @@ class Matrix:
         self.root = ColumnObject('root')
         self.ncolumns = 0
         self._covered_columns = []
+        self._row_headers = []
 
     @property
     def empty(self):
@@ -83,10 +84,7 @@ class Matrix:
         # the array points to them.
 
         row_header = RowHeader(row_number)
-        self.root.u.d = row_header
-        row_header.d = self.root
-        row_header.u = self.root.u
-        self.root.u = row_header
+        self._row_headers.append(row_header)
 
         last_item_inserted = None
         ch = self.root
@@ -137,15 +135,12 @@ class Matrix:
         # traverse by rows
         print self.column_headers
 
-        rheader = self.root.d
-        while rheader != self.root:
+        for rheader in self._row_headers:
 
             if partial_solution is None:
                 self._display_row(rheader)
             elif rheader.row in partial_solution:
                 self._display_row(rheader)
-
-            rheader = rheader.d
 
     def display_by_columns(self):
 
@@ -250,6 +245,7 @@ def dlx1(matrix, partial_solution, level=0):
             if answer == True:
                 partial_solution.append(r.row)
                 return True
+
             matrix.unreduce_by_row(r)
             r = r.d
 
@@ -257,32 +253,6 @@ def dlx1(matrix, partial_solution, level=0):
         ch = ch.r
 
     return False
-
-def test_cover_columns(matrix):
-
-    print matrix.column_headers
-
-    ch = matrix.root.r
-    while ch != matrix.root:
-
-        matrix.cover_column(ch)
-        print 'covered column %s, headers = |%s|' % (ch.name, matrix.column_headers)
-        matrix.uncover_column(ch)
-        print 'uncovered column %s, headers = |%s|' % (ch.name, matrix.column_headers)
-
-        ch = ch.r
-
-    print matrix.column_headers
-
-    cols = [matrix.root.r, matrix.root.r.r, matrix.root.l, matrix.root.l.l]
-
-    for c in cols:
-        matrix.cover_column(c)
-
-    for c in cols[::-1]:
-        matrix.uncover_column(c)
-
-    print matrix.column_headers
         
 def main(filename):
 
