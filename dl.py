@@ -231,12 +231,17 @@ class DLXAlgorithm:
         self._matrix = matrix
         self._solutions = set()
         self._partial_solution = []
+        self.nodes = 0
+        self.leaves = 0
+        self.backtracks = 0
 
     def dlx1(self, level=0):
-    
+
+        self.nodes += 1
         if self._matrix.empty:
             l = [p.row_header.n for p in self._partial_solution]
             self._solutions.add(tuple(sorted(l)))
+            self.leaves += 1
             return True
     
         # check for an empty column.  if we find one,
@@ -244,6 +249,7 @@ class DLXAlgorithm:
         ch = self._matrix.root.r
         while ch != self._matrix.root:
             if ch.empty:
+                self.backtracks += 1
                 return False
             ch = ch.r
     
@@ -266,10 +272,11 @@ class DLXAlgorithm:
                 self._partial_solution.pop()
                 self._matrix.unreduce_by_row(r)
                 r = r.d
-    
+
             self._matrix.uncover_column(ch)
             ch = ch.r
     
+        self.backtracks += 1
         return False
 
     @property 
@@ -304,6 +311,10 @@ def main(filename):
     else:
         for s in solutions:
             matrix.display(list(s))
+
+    print 'nodes:  %d' % dlx.nodes
+    print 'leaves: %d' % dlx.leaves
+    print 'backtracks: %d' % dlx.backtracks
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
