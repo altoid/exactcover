@@ -9,6 +9,7 @@ class ColumnHeader:
         self._name = name
         self._n = col_number
         self.l = self.r = self.u = self.d = self
+        self.count = 0 # no. of bits in column
 
     @property
     def name(self):
@@ -71,7 +72,8 @@ class Matrix:
 
         ch = self.root.r
         while ch != self.root:
-            result = result + ch.name + ' '
+            s = '%s (%d) ' % (ch.name, ch.count)
+            result = result + s
             ch = ch.r
 
         return result
@@ -113,6 +115,7 @@ class Matrix:
                     last_item_inserted.r.l = bit_obj
                     last_item_inserted.r = bit_obj
                 last_item_inserted = bit_obj
+                ch.count += 1
 
         if last_item_inserted is not None:
             row_header.r = last_item_inserted
@@ -151,21 +154,6 @@ class Matrix:
         for h in headers:
             self._display_row(h)
 
-#    def display_by_columns(self):
-#
-#        print '=' * 33
-#
-#        # traverse the whole matrix, by columns
-#        c = self.root.r
-#        while c != self.root:
-#            print c.name
-#            bit = c.d
-#            while bit != c:
-#                print "(%s, %d, %d)" % (bit.c.name, bit.row, bit.column),
-#                bit = bit.d
-#            print
-#            c = c.r
-
     def cover_column(self, c):
         '''
         the operation of covering column c removes c from the header
@@ -183,6 +171,7 @@ class Matrix:
                 bit.u.d = bit.d
                 bit.d.u = bit.u
                 bit = bit.r
+                bit.c.count -= 1
             cbit = cbit.d
 
         self._covered_columns.append(c)
@@ -199,12 +188,13 @@ class Matrix:
                 bit.d.u = bit
                 bit.u.d = bit
                 bit = bit.r
+                bit.c.count += 1
             cbit = cbit.u
 
         if c != self._covered_columns[-1]:
-            print "######################### %s != %s" % (c.name, self._covered_columns[-1].name)
-        else:
-            self._covered_columns.pop()
+            raise ValueError("######################### %s != %s" % (c.name, self._covered_columns[-1].name))
+
+        self._covered_columns.pop()
 
     def reduce_by_row(self, d):
         # d is just a data object in the matrix
@@ -236,6 +226,8 @@ class DLXAlgorithm:
         self.backtracks = 0
 
     def dlx1(self, level=0):
+
+#        log_msg(level, self._matrix.column_headers)
 
         self.nodes += 1
         if self._matrix.empty:
