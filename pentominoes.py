@@ -230,19 +230,19 @@ def count_piece_placements(piece):
 
     return count
 
-def piece_rows(piece):
+def piece_rows(piece, w, h):
 
     global center
 
     x = y = 0
     piece = piece.moveto(x, y)
-    while piece._maxy < 8:
-        while piece._maxx < 8:
+    while piece._maxy < h:
+        while piece._maxx < w:
             i = piece.intersection(center)
             if len(i) == 0:
-                row = ['0'] * 64
+                row = ['0'] * (w * h)
                 for pt in piece:
-                    row[pt[1] * 8 + pt[0]] = '1'
+                    row[pt[1] * w + pt[0]] = '1'
                 yield row
             x += 1
             piece = piece.moveto(x, y)
@@ -250,23 +250,23 @@ def piece_rows(piece):
         y += 1
         piece = piece.moveto(x, y)
 
-def print_all_arrangements():
+def print_all_arrangements(w, h):
 
     all_pieces = list('nluxwpftvyzi')
-    column_headers = all_pieces + ['b'] * (8 * 8)
+    column_headers = all_pieces + ['b'] * (w * h)
     print ' '.join(column_headers)
     for n in all_pieces:
         p = make_piece(n)
         prelude = ['0'] * len(all_pieces)
         prelude[all_pieces.index(n)] = '1'
         for i in orientations(p):
-            for row in piece_rows(i):
+            for row in piece_rows(i, w, h):
                 k = prelude + row
                 print ' '.join(k)
 
 if __name__ == '__main__':
 
-    print_all_arrangements()
+    print_all_arrangements(8, 8)
 
 #    p = make_piece('y')
 #    print_piece_rows(p)
