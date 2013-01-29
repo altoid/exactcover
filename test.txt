@@ -1,7 +1,8 @@
+ # from the knuth paper
 A B C D E F G
 0 0 1 0 1 1 0
 1 0 0 1 0 0 1
 0 1 1 0 0 1 0
-1 0 0 1 0 0 0
+1 0 0 1 0 0 0    # pester
 0 1 0 0 0 0 1
 0 0 0 1 1 0 1

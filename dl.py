@@ -72,7 +72,8 @@ class Matrix:
 
         ch = self.root.r
         while ch != self.root:
-            s = '%s (%d) ' % (ch.name, ch.count)
+#            s = '%s (%d) ' % (ch.name, ch.count)
+            s = '%s ' % (ch.name)
             result = result + s
             ch = ch.r
 
@@ -154,15 +155,41 @@ class Matrix:
         for h in headers:
             self._display_row(h)
 
+    def display_by_columns(self):
+
+        print '=' * 44
+        cheader = self.root.r
+        while cheader != self.root:
+            print cheader.name,
+            last_row = 0
+            b = cheader.d
+            while b != cheader:
+
+                for i in range(last_row, b.row_header.n):
+                    print '0',
+                print '1',
+                last_row = b.row_header.n + 1
+
+                b = b.d
+            for i in range(last_row, len(self._row_headers)):
+                print '0',
+
+            cheader = cheader.r
+            print
+
     def cover_column(self, c):
         '''
         the operation of covering column c removes c from the header
         list and removes all rows in c's own list from the other
         column lists they are in.
+
+        returns the number of objects removed from the column; i.e. the number
+        of dance steps.
         '''
 
         c.l.r = c.r
         c.r.l = c.l
+        steps = 0
 
         cbit = c.d
         while cbit != c:
@@ -172,14 +199,24 @@ class Matrix:
                 bit.d.u = bit.u
                 bit = bit.r
                 bit.c.count -= 1
+                steps += 1
             cbit = cbit.d
 
         self._covered_columns.append(c)
+        return steps
 
     def uncover_column(self, c):
 
+        '''
+        undoes cover_column.  note that it applies its steps in reverse order.
+        
+        returns the number of objects returned to the column; i.e. the number
+        of dance steps.
+        '''
+        
         c.l.r = c
         c.r.l = c
+        steps = 0
 
         cbit = c.u
         while cbit != c:
@@ -189,26 +226,34 @@ class Matrix:
                 bit.u.d = bit
                 bit = bit.r
                 bit.c.count += 1
+                steps += 1
             cbit = cbit.u
 
         if c != self._covered_columns[-1]:
             raise ValueError("######################### %s != %s" % (c.name, self._covered_columns[-1].name))
 
         self._covered_columns.pop()
+        return steps
 
     def reduce_by_row(self, d):
         # d is just a data object in the matrix
         x = d.r
+        updates = 0
         while x != d:
-            self.cover_column(x.c)
+            updates += self.cover_column(x.c)
             x = x.r
+
+        return updates
 
     def unreduce_by_row(self, d):
         # d is just a data object in the matrix
         x = d.l
+        updates = 0
         while x != d:
-            self.uncover_column(x.c)
+            updates += self.uncover_column(x.c)
             x = x.l
+
+        return updates
 
 def log_msg(level, msg):
 
@@ -224,6 +269,35 @@ class DLXAlgorithm:
         self.nodes = 0
         self.leaves = 0
         self.backtracks = 0
+        self.updates = 0
+
+    def leftmost_all(self):
+        # generator.  naively picks the leftmost available column in the array.
+        ch = self._matrix.root.r
+        while ch != self._matrix.root:
+            yield ch
+            ch = ch.r
+
+    def leftmost(self):
+        # generator.  naively picks the leftmost available column in the array.
+        ch = self._matrix.root.r
+        if ch != self._matrix.root:
+            yield ch
+
+    def shortest(self):
+        # generator.  returns the shortest column encountered in traversing the colums left to right.
+        # knuth's S heuristic.
+
+        ch = self._matrix.root.r
+        s = ch.count
+        shortest = ch
+        while ch != self._matrix.root:
+            if ch.count < s:
+                s = ch.count
+                shortest = ch
+            ch = ch.r
+
+        yield shortest
 
     def dlx1(self, level=0):
 
@@ -245,29 +319,26 @@ class DLXAlgorithm:
                 return False
             ch = ch.r
     
-        # start with the leftmost column, keep trying
-            
-        ch = self._matrix.root.r
-        while ch != self._matrix.root:
-    
-            self._matrix.cover_column(ch)
+#        for ch in self.leftmost():    
+        for ch in self.shortest():
+            self.updates += self._matrix.cover_column(ch)
     
             # go through each row and reduce
             r = ch.d
             while r != ch:
     
-                self._matrix.reduce_by_row(r)
+                self.updates += self._matrix.reduce_by_row(r)
                 self._partial_solution.append(r)
     
                 answer = self.dlx1(level + 1)
     
                 self._partial_solution.pop()
-                self._matrix.unreduce_by_row(r)
+                self.updates += self._matrix.unreduce_by_row(r)
+
                 r = r.d
 
-            self._matrix.uncover_column(ch)
-            ch = ch.r
-    
+            self.updates += self._matrix.uncover_column(ch)
+
         self.backtracks += 1
         return False
 
@@ -275,22 +346,30 @@ class DLXAlgorithm:
     def solutions(self):
         return self._solutions
 
-def main(filename):
+def matrix_from_file(filename):
 
     matrix = Matrix()
 
     f = open(filename)
-    h = f.readline()
-    column_names = h.split()
-
-    matrix.add_column_headers(column_names)
-
-    # row headers are just for traversal/printing.
-    # nothing in the matrix points to them.
+    column_names = None
 
     for line in f:
-        bits = line.split()
-        matrix.add_row(bits)
+        text = line.split('#', 1)[0]
+        elements = text.split()
+        if not elements:
+            continue
+
+        if column_names is None:
+            column_names = elements
+            matrix.add_column_headers(column_names)
+        else:
+            matrix.add_row(elements)
+
+    return matrix
+
+def main(filename):
+
+    matrix = matrix_from_file(filename)
 
     matrix.display()
 
@@ -307,6 +386,7 @@ def main(filename):
     print 'nodes:  %d' % dlx.nodes
     print 'leaves: %d' % dlx.leaves
     print 'backtracks: %d' % dlx.backtracks
+    print 'updates: %d' % dlx.updates
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
