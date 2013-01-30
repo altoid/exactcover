@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import operator
 
 class ColumnHeader:
 
@@ -159,23 +160,33 @@ class Matrix:
 
         print '=' * 44
         cheader = self.root.r
+        rendition = []
         while cheader != self.root:
-            print cheader.name,
+            s = cheader.name
             last_row = 0
             b = cheader.d
             while b != cheader:
 
                 for i in range(last_row, b.row_header.n):
-                    print '0',
-                print '1',
+                    s += '0'
+                s += '1'
                 last_row = b.row_header.n + 1
 
                 b = b.d
             for i in range(last_row, len(self._row_headers)):
-                print '0',
+                s += '0'
 
             cheader = cheader.r
-            print
+            rendition.append(s)
+
+        l = len(rendition[0])
+
+        for j in range(l):
+            s = ''
+            for c in rendition:
+                s += c[j]
+
+            print ' '.join(s)
 
     def cover_column(self, c):
         '''
@@ -320,25 +331,29 @@ class DLXAlgorithm:
             ch = ch.r
     
 #        for ch in self.leftmost():    
+        updates = 0
         for ch in self.shortest():
-            self.updates += self._matrix.cover_column(ch)
+            updates += self._matrix.cover_column(ch)
     
             # go through each row and reduce
             r = ch.d
             while r != ch:
     
-                self.updates += self._matrix.reduce_by_row(r)
+                updates += self._matrix.reduce_by_row(r)
                 self._partial_solution.append(r)
     
                 answer = self.dlx1(level + 1)
     
                 self._partial_solution.pop()
-                self.updates += self._matrix.unreduce_by_row(r)
+                updates += self._matrix.unreduce_by_row(r)
 
                 r = r.d
 
-            self.updates += self._matrix.uncover_column(ch)
+            updates += self._matrix.uncover_column(ch)
 
+#        log_msg(level, 'updates this level (%d):  %d' % (level, updates))
+        self.updates += updates
+                
         self.backtracks += 1
         return False
 
