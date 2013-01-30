@@ -17,6 +17,8 @@ class TestDL(unittest.TestCase):
         cheader = matrix.root.r
         row = cheader.d
 
+        print 'reducing by row %d' % row.row_header.n
+
         updates = matrix.reduce_by_row(row)
         matrix.display_by_columns()
 

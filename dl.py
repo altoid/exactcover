@@ -179,14 +179,23 @@ class Matrix:
             cheader = cheader.r
             rendition.append(s)
 
-        l = len(rendition[0])
+        nrows = len(rendition[1:])
 
-        for j in range(l):
+        s = ''
+        for c in rendition:
+            s += c[0]
+        print ' '.join(s)
+
+        rcount = 0
+        for j in range(nrows):
             s = ''
             for c in rendition:
-                s += c[j]
+                s += c[j + 1]
 
-            print ' '.join(s)
+            if s != '0' * len(rendition):
+                s = ' '.join(s) + ' (%d)' % self._row_headers[rcount].n
+                print s
+            rcount += 1
 
     def cover_column(self, c):
         '''
@@ -215,6 +224,16 @@ class Matrix:
 
         self._covered_columns.append(c)
         return steps
+
+    def reduce_by_row(self, d):
+        # d is just a data object in the matrix
+        x = d.r
+        updates = 0
+        while x != d:
+            updates += self.cover_column(x.c)
+            x = x.r
+
+        return updates
 
     def uncover_column(self, c):
 
@@ -245,16 +264,6 @@ class Matrix:
 
         self._covered_columns.pop()
         return steps
-
-    def reduce_by_row(self, d):
-        # d is just a data object in the matrix
-        x = d.r
-        updates = 0
-        while x != d:
-            updates += self.cover_column(x.c)
-            x = x.r
-
-        return updates
 
     def unreduce_by_row(self, d):
         # d is just a data object in the matrix
