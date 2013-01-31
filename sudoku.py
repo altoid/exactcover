@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import math
 
 def gen_number_row(value, x, y, size):
@@ -39,3 +41,15 @@ def gen_row(value, x, y, size):
     result = npart + rowpart + colpart + regpart
 
     return result
+
+def gen_matrix(size=9):
+
+    # gratuitous column header
+    print 'x' * 4 * size * size
+    for i in range(1, size + 1):
+        for x in range(size):
+            for y in range(size):
+                print gen_row(i, x, y, size)
+
+if __name__ == '__main__':
+    gen_matrix()

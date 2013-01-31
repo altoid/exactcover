@@ -40,13 +40,12 @@ class TestSudoku(unittest.TestCase):
 
     def test_gen_row(self):
 
+        size = 9
         # i, x, y
-        for i in range(1, 5):
-            for x in range(4):
-                for y in range(4):
-#                    pdb.set_trace()
-#                    print i,x,y
-                    v = sudoku.gen_row(i, x, y, 4)
+        for i in range(1, size + 1):
+            for x in range(size):
+                for y in range(size):
+                    v = sudoku.gen_row(i, x, y, size)
                     l = list(v)
                     s = [' ' if b == '0' else b for b in l]
                     print ''.join(s)
