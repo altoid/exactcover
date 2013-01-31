@@ -2,28 +2,28 @@
 
 import math
 
-def gen_number_row(value, x, y, size):
+def gen_number_row(value, x, y, size=9):
 
     r = ['0'] * size * size
     r[x * size + y] = '1'
 
     return ''.join(r)
 
-def gen_row_row(value, x, y, size):
+def gen_row_row(value, x, y, size=9):
 
     r = ['0'] * size * size
     r[size * y + (value - 1)] = '1'
 
     return ''.join(r)
 
-def gen_column_row(value, x, y, size):
+def gen_column_row(value, x, y, size=9):
 
     r = ['0'] * size * size
     r[size * x + (value - 1)] = '1'
 
     return ''.join(r)
 
-def gen_region_row(value, x, y, size):
+def gen_region_row(value, x, y, size=9):
 
     r = ['0'] * size * size
     n = int(math.sqrt(size))
@@ -31,7 +31,7 @@ def gen_region_row(value, x, y, size):
 
     return ''.join(r)
 
-def gen_row(value, x, y, size):
+def gen_row(value, x, y, size=9):
 
     npart = gen_number_row(value, x, y, size)
     rowpart = gen_row_row(value, x, y, size)
@@ -50,6 +50,22 @@ def gen_matrix(size=9):
         for x in range(size):
             for y in range(size):
                 print gen_row(i, x, y, size)
+
+def values_from_row(row):
+    '''
+    given a row from the matrix, figure out the number and the x and y values.
+    '''
+
+    size = len(row) / 4
+    size = int(math.sqrt(size))
+
+    l = [k[0] for k in enumerate(row) if k[1] == '1']
+
+    ni = l[1] % size + 1
+    nx = l[0] / size 
+    ny = l[0] % size
+
+    return (ni, nx, ny)
 
 if __name__ == '__main__':
     gen_matrix()

@@ -41,14 +41,18 @@ class TestSudoku(unittest.TestCase):
     def test_gen_row(self):
 
         size = 9
-        # i, x, y
+
         for i in range(1, size + 1):
             for x in range(size):
                 for y in range(size):
-                    v = sudoku.gen_row(i, x, y, size)
-                    l = list(v)
-                    s = [' ' if b == '0' else b for b in l]
-                    print ''.join(s)
+
+                    row = list(sudoku.gen_row(i, x, y, size))
+
+                    ni, nx, ny = sudoku.values_from_row(row)
+
+                    self.assertEquals(i, ni)
+                    self.assertEquals(x, nx)
+                    self.assertEquals(y, ny)
 
 if __name__ == '__main__':
     unittest.main()
