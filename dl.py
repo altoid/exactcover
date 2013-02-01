@@ -25,7 +25,7 @@ class ColumnHeader:
         return self.d == self
 
     def __str__(self):
-        return self._name
+        return '%s (%d)' % (self._name, self._n)
 
 class RowHeader:
 
@@ -141,7 +141,7 @@ class Matrix:
 
         print
 
-    def display(self, solution=None):
+    def display_by_rows(self, solution=None):
         # solution is a list of ints giving array indices
         print '%s %s' % ('*' * 44, str(solution) if solution else '')
 
@@ -179,7 +179,7 @@ class Matrix:
             cheader = cheader.r
             rendition.append(s)
 
-        nrows = len(rendition[1:])
+        nrows = len(rendition[0][1:])
 
         s = ''
         for c in rendition:
@@ -275,13 +275,37 @@ class Matrix:
 
         return updates
 
+    def display_sloppy(self):
+
+        print '=' * 44
+        ch = self.root.r
+        while ch != self.root:
+            print ch,
+            ch = ch.r
+        print
+        for rh in self._row_headers:
+            print 'row %d: ' % rh.n,
+            rdata = rh.l
+            while True:
+                print '(row %d, col %d)' % (rdata.row_header.n, rdata.column_header.n),
+                if rdata == rh.r:
+                    break
+                rdata = rdata.r
+            print
+
 def log_msg(level, msg):
 
     print "%s%s" % ('    ' * level, msg)
 
 class DLXAlgorithm:
 
-    def __init__(self, matrix):
+    def __init__(self, matrix, seeds=None):
+        
+        '''
+        seeds is the set of rows (by number) that we want in a
+        solution.  it may be that the seed list precludes a solution
+        when one may be present in general.  tough shit.
+        '''
 
         self._matrix = matrix
         self._solutions = set()
@@ -290,6 +314,20 @@ class DLXAlgorithm:
         self.leaves = 0
         self.backtracks = 0
         self.updates = 0
+        self._seeds = []
+
+        if seeds:
+
+            for seed in seeds:
+                rheader = self._matrix._row_headers[seed]
+                rdata = rheader.r
+#                print 'rdata (c = %d, r = %d)' % (rdata.column_header.n, rdata.row_header.n)
+                cheader = rdata.column_header
+
+                self._matrix.cover_column(cheader)
+                self.updates += self._matrix.reduce_by_row(rdata)
+
+            self._seeds = seeds
 
     def leftmost_all(self):
         # generator.  naively picks the leftmost available column in the array.
@@ -345,18 +383,18 @@ class DLXAlgorithm:
             updates += self._matrix.cover_column(ch)
     
             # go through each row and reduce
-            r = ch.d
-            while r != ch:
+            cvalue = ch.d
+            while cvalue != ch:
     
-                updates += self._matrix.reduce_by_row(r)
-                self._partial_solution.append(r)
+                updates += self._matrix.reduce_by_row(cvalue)
+                self._partial_solution.append(cvalue)
     
                 answer = self.dlx1(level + 1)
     
                 self._partial_solution.pop()
-                updates += self._matrix.unreduce_by_row(r)
+                updates += self._matrix.unreduce_by_row(cvalue)
 
-                r = r.d
+                cvalue = cvalue.d
 
             updates += self._matrix.uncover_column(ch)
 
@@ -368,7 +406,8 @@ class DLXAlgorithm:
 
     @property 
     def solutions(self):
-        return self._solutions
+        for s in self._solutions:
+            yield list(s) + self._seeds
 
 def matrix_from_file(filename):
 
@@ -395,17 +434,13 @@ def main(filename):
 
     matrix = matrix_from_file(filename)
 
-    matrix.display()
+    matrix.display_by_rows()
 
     dlx = DLXAlgorithm(matrix)
     dlx.dlx1()
-    solutions = dlx.solutions
 
-    if len(solutions) == 0:
-        print 'no solution'
-    else:
-        for s in solutions:
-            matrix.display(list(s))
+    for s in dlx.solutions:
+        matrix.display_by_rows(list(s))
 
     print 'nodes:  %d' % dlx.nodes
     print 'leaves: %d' % dlx.leaves
