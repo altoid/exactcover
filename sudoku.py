@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import math
+import sys
 
 def gen_number_row(value, x, y, size=9):
 
@@ -83,5 +84,53 @@ def tuple_from_rownum(rownum, size=9):
 
     return (n, x, y)
 
+def tableau_from_file(filename):
+    '''
+    file format:
+    first line is sudoku size, e.g. 4 or 9
+    rest of file is the tableau, with 0 for missing values.
+    '''
+
+    f = open(filename)
+    line = f.readline()
+    size = int(line)
+
+    row_vectors = []
+    initial_rows = []
+    y = 0
+    for line in f:
+        elements = [int(x) for x in line.split()]
+
+        x = 0
+        for n in elements:
+            if n > 0:
+                r = rownum_from_tuple((n, x, y), size)
+                initial_rows.append(r)
+                row = gen_row(n, x, y, size)
+                row_vector = [int(b) for b in list(row)]
+    
+#                print ''.join(['1' if b else '.' for b in row_vector]),
+#                print '(n = %d, x = %d, y = %d) ==> %d' % (n, x, y, r)
+                row_vectors.append(row_vector)
+            x += 1
+        y += 1
+
+    datafile = 'sudoku%d_data.txt' % size
+
+    # sum each the columns
+    rowlength = 4 * size * size
+    for i in range(rowlength):
+        c = [v[i] for v in row_vectors]
+        if sum(c) > 1:
+            print 'this tableau is ca-ca.'
+            sys.exit(1)
+
+    print 'seed:', initial_rows
+
 if __name__ == '__main__':
-    gen_matrix()
+    if len(sys.argv) < 2:
+        print "arg count:  |%s|" % (''.join(sys.argv))
+        sys.exit(1)
+
+    tableau_from_file(sys.argv[1])
+
