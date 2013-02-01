@@ -2,8 +2,32 @@
 
 import unittest
 import gaya
+import pentominoes
 
 class TestGaya(unittest.TestCase):
+
+    def test_translate_to_plane(self):
+
+        ypiece = pentominoes.make_piece('y')
+
+        with self.assertRaises(ValueError):
+            gaya.translate_to_plane(ypiece, xplane=0, yplane=0)
+
+        for p in ypiece:
+            print p
+        print ypiece
+
+        print gaya.translate_to_plane(ypiece, zplane=0)
+
+        print gaya.translate_to_plane(ypiece, xplane=3)
+
+        yp = gaya.translate_to_plane(ypiece, yplane=4)
+
+        for p in yp:
+            print p,gaya.xyz_to_cell(p)
+
+        knob = gaya.find_outlier(yp)
+        print knob,gaya.xyz_to_cell(knob)
 
     def test_xyz_to_cell(self):
     
