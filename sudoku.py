@@ -2,6 +2,7 @@
 
 import math
 import sys
+import dl
 
 def gen_number_row(value, x, y, size=9):
 
@@ -84,11 +85,29 @@ def tuple_from_rownum(rownum, size=9):
 
     return (n, x, y)
 
+def rows_to_tableau(row_nums, size):
+
+    # this doesn't work
+#    tableau = [[0] * size] * size
+
+    tableau = []
+    for i in range(size):
+        tableau.append([0] * size)
+
+    for rn in row_nums:
+        value, x, y = tuple_from_rownum(rn, size)
+        tableau[y][x] = value
+
+    return tableau
+
 def tableau_from_file(filename):
     '''
     file format:
     first line is sudoku size, e.g. 4 or 9
     rest of file is the tableau, with 0 for missing values.
+
+    returns the size and a list of the row numbers in the data matrix that correspond to
+    the values in the tableau.
     '''
 
     f = open(filename)
@@ -115,9 +134,10 @@ def tableau_from_file(filename):
             x += 1
         y += 1
 
-    datafile = 'sudoku%d_data.txt' % size
+    # sum each the columns.  4 is fixed; it is the number
+    # of sets of columns in the data matrix, one for each of
+    # (value, row, column, region)
 
-    # sum each the columns
     rowlength = 4 * size * size
     for i in range(rowlength):
         c = [v[i] for v in row_vectors]
@@ -125,12 +145,35 @@ def tableau_from_file(filename):
             print 'this tableau is ca-ca.'
             sys.exit(1)
 
-    print 'seed:', initial_rows
+    return size, initial_rows
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print "arg count:  |%s|" % (''.join(sys.argv))
         sys.exit(1)
 
-    tableau_from_file(sys.argv[1])
+    size, initial_rows = tableau_from_file(sys.argv[1])
 
+    initial_tableau = rows_to_tableau(initial_rows, size)
+    for row in initial_tableau:
+        print row
+
+    print 'seed:', initial_rows
+
+    datafile = 'sudoku%d_data.txt' % size
+
+    matrix = dl.matrix_from_file(datafile)
+
+    dlx = dl.DLXAlgorithm(matrix, seeds=initial_rows)
+
+    dlx.dlx1()
+
+    for s in dlx.solutions:
+        solution_tableau = rows_to_tableau(s, size)
+        print '=' * 44
+        print s
+        for row in solution_tableau:
+            print row
+
+
+    

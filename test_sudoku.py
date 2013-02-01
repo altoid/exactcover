@@ -69,6 +69,18 @@ class TestSudoku(unittest.TestCase):
             self.assertEquals(t, t2)
             self.assertEquals(r, r2)
 
+    def test_rows_to_tableau(self):
+
+        filename = 'sudoku4_1.txt'
+
+        size, initial = sudoku.tableau_from_file(filename)
+        print size, initial
+
+        tableau = sudoku.rows_to_tableau(initial, size)
+
+        for row in tableau:
+            print row
+
 if __name__ == '__main__':
     unittest.main()
 
