@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sets
+import copy
 
 class Board:
 
@@ -133,12 +134,10 @@ class Piece(sets.ImmutableSet):
         for i in range(h):
             arr.append([' '] * w)
 
-        t = self.moveto(0, 0)
-        for p in t:
-            print p,
-        print
-        for p in t:
-            arr[p[1]][p[0]] = '*'
+        for p in self:
+            x = p[0] - self._minx
+            y = p[1] - self._miny
+            arr[y][x] = '*'
 
         for i in range(h):
             result += ''.join(arr[i])
@@ -229,6 +228,26 @@ def piece_rows(piece, w, h, nothere=()):
         x = 0
         y += 1
         piece = piece.moveto(x, y)
+
+def piece_placements(piece, w, h, nothere=()):
+
+    '''
+    nothere is a list of coordinates which may
+    not have a piece placed on them.
+    '''
+
+    x = y = 0
+    p = piece.moveto(x, y)
+    while p._maxy < h:
+        while p._maxx < w:
+            i = p.intersection(nothere)
+            if len(i) == 0:
+                yield p
+            x += 1
+            p = p.moveto(x, y)
+        x = 0
+        y += 1
+        p = p.moveto(x, y)
 
 def all_arrangements(piece, w, h, nothere=()):
 
