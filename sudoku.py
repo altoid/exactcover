@@ -67,5 +67,21 @@ def values_from_row(row):
 
     return (ni, nx, ny)
 
+def rownum_from_tuple(t, size=9):
+    '''
+    t = (value, x, y)
+    '''
+
+    return (t[0] - 1) * (size * size) + t[1] * size + t[2]
+
+def tuple_from_rownum(rownum, size=9):
+
+    n = rownum / (size * size) + 1
+    r = rownum % (size * size)
+    x = r / size
+    y = r % size
+
+    return (n, x, y)
+
 if __name__ == '__main__':
     gen_matrix()

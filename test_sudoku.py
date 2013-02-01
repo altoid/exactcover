@@ -54,6 +54,21 @@ class TestSudoku(unittest.TestCase):
                     self.assertEquals(x, nx)
                     self.assertEquals(y, ny)
 
+    def test_rownum_tuple(self):
+
+        size = 9
+        nrows = size ** 3
+
+        for r in range(nrows):
+
+            t = sudoku.tuple_from_rownum(r)
+            r2 = sudoku.rownum_from_tuple(t)
+
+            t2 = sudoku.tuple_from_rownum(r2)
+
+            self.assertEquals(t, t2)
+            self.assertEquals(r, r2)
+
 if __name__ == '__main__':
     unittest.main()
 
