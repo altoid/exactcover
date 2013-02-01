@@ -207,38 +207,18 @@ def make_piece(filename):
 
     return Piece(points)
 
-center = set([(3,3),(3,4),(4,3),(4,4)])
+def piece_rows(piece, w, h, nothere=()):
 
-def count_piece_placements(piece):
-
-    global center
-
-    count = 0
-    x = y = 0
-    piece = piece.moveto(x, y)
-
-    while piece._maxy < 8:
-        while piece._maxx < 8:
-            i = center.intersection(piece)
-            if len(i) == 0:
-                count += 1
-            x += 1
-            piece = piece.moveto(x, y)
-        x = 0
-        y += 1
-        piece = piece.moveto(x, y)
-
-    return count
-
-def piece_rows(piece, w, h):
-
-    global center
+    '''
+    nothere is a list of coordinates which may
+    not have a piece placed on them.
+    '''
 
     x = y = 0
     piece = piece.moveto(x, y)
     while piece._maxy < h:
         while piece._maxx < w:
-            i = piece.intersection(center)
+            i = piece.intersection(nothere)
             if len(i) == 0:
                 row = ['0'] * (w * h)
                 for pt in piece:
@@ -250,23 +230,25 @@ def piece_rows(piece, w, h):
         y += 1
         piece = piece.moveto(x, y)
 
-def print_all_arrangements(w, h):
+def all_arrangements(piece, w, h, nothere=()):
 
-    all_pieces = list('nluxwpftvyzi')
-    column_headers = all_pieces + ['b'] * (w * h)
-    print ''.join(column_headers)
-    for n in all_pieces:
-        p = make_piece(n)
-        prelude = ['0'] * len(all_pieces)
-        prelude[all_pieces.index(n)] = '1'
-        for i in orientations(p):
-            for row in piece_rows(i, w, h):
-                k = prelude + row
-                print ''.join(k)
+    for i in orientations(piece):
+        for row in piece_rows(i, w, h, nothere):
+            yield ''.join(row)
 
 if __name__ == '__main__':
 
-    print_all_arrangements(8, 8)
+    center = set([(3,3),(3,4),(4,3),(4,4)])
 
-#    p = make_piece('y')
-#    print_piece_rows(p)
+    all_pieces = list('nluxwpftvyzi')
+    w = h = 8
+    column_headers = all_pieces + ['b'] * (w * h)
+    print ''.join(column_headers)
+    for name in all_pieces:
+        prelude = ['0'] * len(all_pieces)
+        prelude[all_pieces.index(name)] = '1'
+        prelude = ''.join(prelude)
+
+        piece = make_piece(name)
+        for a in all_arrangements(piece, w, h, center):
+            print prelude + a
