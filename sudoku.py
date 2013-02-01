@@ -147,6 +147,44 @@ def tableau_from_file(filename):
 
     return size, initial_rows
 
+def print_tableau(tableau):
+
+    size = len(tableau)
+    squirt = int(math.sqrt(size))
+
+    y = 0
+    for r in tableau:
+
+        if y % squirt == 0:
+            e = ''
+            for x in range(size):
+                e += '%s---' % ('+' if x % squirt == 0 else '-')
+            e += '+'
+        else:
+            a = [' '] * 4 * size
+            for i in range(4 * size):
+                if i % (squirt * 4) == 0:
+                    a[i] = '|'
+            e = ''.join(a)
+            e += '|'
+        print e
+
+        e = ''
+        x = 0
+        for i in r:
+            e += '%s %d ' % ('|' if x % squirt == 0 else ' ', i)
+            x += 1
+        e += '|'
+        print e
+
+        y += 1
+
+    e = ''
+    for x in range(size):
+        e += '%s---' % ('+' if x % squirt == 0 else '-')
+    e += '+'
+    print e
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         print "arg count:  |%s|" % (''.join(sys.argv))
@@ -172,8 +210,5 @@ if __name__ == '__main__':
         solution_tableau = rows_to_tableau(s, size)
         print '=' * 44
         print s
-        for row in solution_tableau:
-            print row
-
-
+        print_tableau(solution_tableau)
     
