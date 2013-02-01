@@ -379,7 +379,7 @@ def matrix_from_file(filename):
 
     for line in f:
         text = line.split('#', 1)[0]
-        elements = text.split()
+        elements = list(text.strip())
         if not elements:
             continue
 

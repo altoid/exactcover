@@ -254,7 +254,7 @@ def print_all_arrangements(w, h):
 
     all_pieces = list('nluxwpftvyzi')
     column_headers = all_pieces + ['b'] * (w * h)
-    print ' '.join(column_headers)
+    print ''.join(column_headers)
     for n in all_pieces:
         p = make_piece(n)
         prelude = ['0'] * len(all_pieces)
@@ -262,7 +262,7 @@ def print_all_arrangements(w, h):
         for i in orientations(p):
             for row in piece_rows(i, w, h):
                 k = prelude + row
-                print ' '.join(k)
+                print ''.join(k)
 
 if __name__ == '__main__':
 
