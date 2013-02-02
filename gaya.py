@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import pentominoes
+import dl
 
 def xyz_to_cell(t, size=5):
 
@@ -93,25 +94,51 @@ def make_row(pts, size=5):
         row[c] = '1'
     return ''.join(row)
 
-if __name__ == '__main__':
+def spin(size=5):
 
+    '''
+    generate 3-space coordes for every orientation of a piece
+    '''
     ypiece = pentominoes.make_piece('y')
-    size = 5
+
     for o in pentominoes.orientations(ypiece):
         for p in pentominoes.piece_placements(o, size, size):
 
             for plane in range(size):
                 three_d = translate_to_plane(p, zplane=plane)
-                r = make_row(three_d)
-                print r
+                yield three_d
 
             for plane in range(size):
                 three_d = translate_to_plane(p, xplane=plane)
-                r = make_row(three_d)
-                print r
+                yield three_d
 
             for plane in range(size):
                 three_d = translate_to_plane(p, yplane=plane)
-                r = make_row(three_d)
-                print r
+                yield three_d
 
+if __name__ == '__main__':
+
+    size = 5
+
+    matrix = dl.Matrix()
+    matrix.add_column_headers([str(x) for x in range(size ** 3)])
+
+    all_rows = []
+    for point_vector in spin(5):
+        
+        r = list(make_row(point_vector, size))
+        all_rows.append(r)
+        matrix.add_row(r)
+
+#        knob = find_outlier(point_vector)
+#        cell = xyz_to_cell(knob, size)
+#        print r
+
+
+    initial_rows = [0]
+    dlx = dl.DLXAlgorithm(matrix, seeds=initial_rows)
+
+    dlx.dlx1()
+
+    for s in dlx.solutions:
+        print s, ''.join(all_rows[s])
