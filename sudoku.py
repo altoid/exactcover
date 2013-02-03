@@ -205,10 +205,13 @@ if __name__ == '__main__':
     dlx = dl.DLXAlgorithm(matrix, seeds=initial_rows)
 
     dlx.dlx1()
-
+    
+    scount = 0
     for s in dlx.solutions:
         solution_tableau = rows_to_tableau(s, size)
         print '=' * 44
         print s
         print_tableau(solution_tableau)
+        scount += 1
     
+    print '%d solutions' % (scount)
