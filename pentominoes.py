@@ -2,6 +2,7 @@
 
 import sets
 import copy
+import dl
 
 class Board:
 
@@ -75,11 +76,12 @@ class Board:
         for a in self._array:
             print ''.join(a)
 
-    def place_piece(self, piece, x, y):
+    def place_piece(self, piece, here=None):
 
-        piece = piece.moveto(x, y)
+        if here is not None:
+            piece = piece.moveto(here[0], here[1])
+
         clist = list(piece)
-        print clist
 
         l = len(clist)
         for i in range(l - 1):
@@ -157,6 +159,13 @@ class Piece(sets.ImmutableSet):
         return Piece(l)
 
     def __str__(self):
+
+        s = ''
+        for p in self:
+            s += ', (%d,%d)' % (p[0], p[1])
+        return s[2:]
+
+    def spatial(self):
 
         result = '';
 
@@ -255,7 +264,7 @@ def piece_rows(piece, w, h, nothere=()):
                 row = ['0'] * (w * h)
                 for pt in piece:
                     row[pt[1] * w + pt[0]] = '1'
-                yield row
+                yield '%s # %s' % (''.join(row), str(piece))
             x += 1
             piece = piece.moveto(x, y)
         x = 0
@@ -286,9 +295,9 @@ def all_arrangements(piece, w, h, nothere=()):
 
     for i in orientations(piece):
         for row in piece_rows(i, w, h, nothere):
-            yield ''.join(row)
+            yield row
 
-if __name__ == '__main__':
+def print_8x8_minus_center():
 
     center = set([(3,3),(3,4),(4,3),(4,4)])
 
@@ -304,3 +313,65 @@ if __name__ == '__main__':
         piece = make_piece(name)
         for a in all_arrangements(piece, w, h, center):
             print prelude + a
+
+def piece_from_row(matrix, row, w, h):
+
+    points = set()
+
+    bits = [x[0] for x in enumerate(matrix._all_rows[row]) if x[1] == '1']
+    for b in bits:
+        y = b / w
+        x = b % w
+        points.add((x, y))
+
+    return Piece(points)
+    
+def print_15x15():
+
+    w = h = 15
+    column_headers = 'b' * (w * h)
+    print column_headers
+
+    piece = make_piece('y')
+    row_count = 0
+    for a in all_arrangements(piece, w, h):
+        print '%s [row %d]' % (a, row_count)
+        row_count += 1
+
+def show_solution(matrix, solution, w, h):
+
+    b = Board(w, h)
+
+    for r in solution:
+        p = piece_from_row(matrix, r, w, h)
+        b.place_piece(p)
+
+    b.print_()
+
+if __name__ == '__main__':
+
+    matrix = dl.matrix_from_file('15x15.txt')
+    seed = [1008, 658, 851, 167]
+    w = h = 15
+
+    dlx = dl.DLXAlgorithm(matrix, seeds=seed)
+
+    dlx.dlx1()
+
+    scount = 0
+    for s in dlx.solutions:
+        scount += 1
+    
+    print '%d solutions' % (scount)
+    if scount > 0:
+        show_solution(matrix, dlx.solutions[0], w, h)
+
+#    show_solution(matrix, seed, w, h)
+
+'''
+[2, 17, 37, 67, 136, 142, 157, 162, 167, 176, 193, 195, 321, 336, 341, 361, 376, 396, 423, 460, 466, 496, 501, 518, 559, 586, 590, 633, 639, 658, 724, 769, 784, 805, 813, 851, 932, 1018, 1092, 1219, 1229, 1239, 1266, 1276, 1282]
+[2, 17, 67, 136, 142, 157, 162, 167, 176, 193, 195, 321, 336, 341, 376, 396, 423, 460, 466, 496, 501, 518, 559, 586, 590, 633, 639, 658, 724, 769, 784, 805, 813, 851, 865, 932, 1018, 1092, 1213, 1219, 1229, 1239, 1266, 1276, 1282]
+[2, 17, 37, 67, 142, 157, 162, 167, 176, 193, 195, 321, 336, 341, 361, 376, 396, 423, 466, 496, 501, 518, 559, 586, 590, 633, 639, 658, 724, 769, 784, 805, 813, 851, 932, 964, 1018, 1092, 1219, 1229, 1239, 1266, 1276, 1282, 1312]
+[2, 17, 67, 142, 157, 162, 167, 176, 193, 195, 321, 336, 341, 376, 396, 423, 466, 496, 501, 518, 559, 586, 590, 633, 639, 658, 724, 769, 784, 805, 813, 851, 865, 932, 964, 1018, 1092, 1213, 1219, 1229, 1239, 1266, 1276, 1282, 1312]
+'''
+

@@ -199,8 +199,6 @@ if __name__ == '__main__':
 
     initial_tableau = rows_to_tableau(initial_rows, size)
     print_tableau(initial_tableau)
-#    for row in initial_tableau:
-#        print row
 
 #    print 'seed:', initial_rows
 
