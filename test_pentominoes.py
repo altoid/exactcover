@@ -67,8 +67,17 @@ class TestPentominoes(unittest.TestCase):
 
     def test_board(self):
 
-        b = pentominoes.Board()
+        b = pentominoes.Board(10, 5)
 
+        b.mark((1, 1))
+        b.mark((5, 1))
+
+        b.connect((9, 0), (9, 4))
+        b.connect((0, 4), (9, 4))
+
+    def test_place_piece(self):
+
+        b = pentominoes.Board(8, 8)
         p = pentominoes.make_piece('f')
 
         b.place_piece(p, 0, 0)

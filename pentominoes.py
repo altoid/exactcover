@@ -5,58 +5,91 @@ import copy
 
 class Board:
 
-    def __init__(self, side=8):
+    '''
+        x ---->
 
-        self._side = side
+    y
+    |
+    |
+    V
 
-        self._array = []
-
-        for i in range(self._side):
-            self._array.append([0] * self._side)
-
-    def _print_edge(self):
-
-        e = ''
-
-        for i in range(self._side):
-            e += '+---'
-        e += '+'
-        print e
-
-    def _print_row(self, row):
-
-        e = ''
-        for v in row:
-            e += '| %s ' % ('*' if v == 1 else ' ')
-        e += '|'
-        print e
-        
-    def print_(self):
-        for a in self._array[::-1]:
-            self._print_edge()
-            self._print_row(a)
-
-        self._print_edge()
-
-    def place_piece(self, piece, x, y):
-
-        piece = piece.moveto(x, y)
-        print piece
-
-        for p in piece:
-
-            self.set_space(p[0], p[1])
-
-    def set_space(self, x, y):
-
-        self._array[y][x] = 1
-
+    '''
     def clear(self):
 
         self._array = []
 
-        for i in range(self._side):
-            self._array.append([0] * self._side)
+        for i in range(self._height):
+            e = ['-'] * (4 * self._width)
+            for i in range(0, len(e), 4):
+                e[i] = '+'
+            e.append('+')
+            self._array.append(e)
+
+            e = [' '] * (4 * self._width)
+            for i in range(0, len(e), 4):
+                e[i] = '|'
+
+            e.append('|')
+            self._array.append(e)
+
+        e = ['-'] * (4 * self._width)
+        for i in range(0, len(e), 4):
+            e[i] = '+'
+        e.append('+')
+        self._array.append(e)
+
+    def __init__(self, width, height):
+
+        self._height = height
+        self._width = width
+
+        self.clear()
+
+    def mark(self, pt):
+        x = 2 + 4 * pt[0]
+        y = 1 + 2 * pt[1]
+        self._array[y][x] = '*'
+
+    def connect(self, pt0, pt1):
+
+        self.mark(pt0)
+        self.mark(pt1)
+
+        x0 = min(2 + 4 * pt0[0], 2 + 4 * pt1[0])
+        x1 = max(2 + 4 * pt0[0], 2 + 4 * pt1[0])
+
+        y0 = min(1 + 2 * pt0[1], 1 + 2 * pt1[1])
+        y1 = max(1 + 2 * pt0[1], 1 + 2 * pt1[1])
+
+        if x0 == x1:
+            for i in range(y0, y1, 2):
+                self._array[i][x0] = '*'
+                self._array[i + 1][x0] = '*'
+                self._array[i + 1][x0 - 1] = ' '
+                self._array[i + 1][x0 + 1] = ' '
+        else:
+            for i in range(x0, x1):
+                self._array[y0][i] = '*'
+
+    def print_(self):
+        for a in self._array:
+            print ''.join(a)
+
+    def place_piece(self, piece, x, y):
+
+        piece = piece.moveto(x, y)
+        clist = list(piece)
+        print clist
+
+        l = len(clist)
+        for i in range(l - 1):
+            for j in range(i, l):
+                if (clist[i][0] == clist[j][0]) or (clist[i][1] == clist[j][1]):
+                    self.connect(clist[i], clist[j])
+
+    def set_space(self, x, y):
+
+        self._array[y][x] = 1
 
 class Piece(sets.ImmutableSet):
 
