@@ -428,6 +428,8 @@ def matrix_from_file(filename):
         else:
             matrix.add_row(elements)
 
+    print 'read %d rows from %s' % (matrix._row_headers[-1].n + 1, filename)
+
     return matrix
 
 def main(filename):

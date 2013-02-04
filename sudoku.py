@@ -87,6 +87,11 @@ def tuple_from_rownum(rownum, size=9):
 
 def rows_to_tableau(row_nums, size):
 
+    '''
+    constructs a 2d array representing the tableau.
+    given the rows in <row_nums>, fills in the array.
+    '''
+
     # this doesn't work
 #    tableau = [[0] * size] * size
 
@@ -172,7 +177,7 @@ def print_tableau(tableau):
         e = ''
         x = 0
         for i in r:
-            e += '%s %d ' % ('|' if x % squirt == 0 else ' ', i)
+            e += '%s %s ' % ('|' if x % squirt == 0 else ' ', ' ' if i == 0 else str(i))
             x += 1
         e += '|'
         print e
@@ -193,10 +198,11 @@ if __name__ == '__main__':
     size, initial_rows = tableau_from_file(sys.argv[1])
 
     initial_tableau = rows_to_tableau(initial_rows, size)
-    for row in initial_tableau:
-        print row
+    print_tableau(initial_tableau)
+#    for row in initial_tableau:
+#        print row
 
-    print 'seed:', initial_rows
+#    print 'seed:', initial_rows
 
     datafile = 'sudoku%d_data.txt' % size
 
@@ -210,7 +216,7 @@ if __name__ == '__main__':
     for s in dlx.solutions:
         solution_tableau = rows_to_tableau(s, size)
         print '=' * 44
-        print s
+#        print s
         print_tableau(solution_tableau)
         scount += 1
     
