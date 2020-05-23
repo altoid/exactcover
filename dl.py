@@ -369,7 +369,6 @@ class DLXAlgorithm:
             l = [p.row_header.n for p in self._partial_solution]
             self._solutions.add(tuple(sorted(l)))
             self.leaves += 1
-            print sorted(l + self._seeds)
             return True
     
         # check for an empty column.  if we find one,
